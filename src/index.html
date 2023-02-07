@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+    <title>Neovis.js Simple Example</title>
+    <script src="https://unpkg.com/neovis.js@2.0.2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="js/neovis_conf.js"></script>
+    <link rel="stylesheet" href="css/main.css">
+
+</head>
+<body onload="draw()">
+        <div class="wrapper">
+            <div id="app">
+                <!-- Left sidebar -->
+                <div class="sidebar-left">
+                    <div class="sidebar-items">
+                        <div class="sidebar-item" @click="changeContent('singleButton')" >
+                            <img src="img/just/icons8-target-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('twoInputs')">
+                            <img src="img/just/icons8-link-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('groupOfNodes')">
+                            <img src="img/just/icons8-complexity-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('allOfNodes')">
+                            <img src="./img/just/icons8-survey-64.png" alt="">
+                          </div>
+                    </div>
+                  
+                </div>
+            
+                <!-- Right sidebar -->
+                <div class="sidebar-right">
+                  <template v-if="content === 'singleButton'">
+                    <h2>Find One node</h2>
+                    <input type="text" placeholder="Node label">
+                    <button>Find</button>
+                  </template>
+                  <template v-if="content === 'twoInputs'">
+                    <h2>Find two nodes</h2>
+                    <input type="text" placeholder="Node 1">
+                    <input type="text" placeholder="Node 2">
+                    <button>Find</button>
+                  </template>
+                  <template v-if="content === 'groupOfNodes'">
+                    <h2>Group of Nodes</h2>
+                    <div class="groups">
+                        <div class="group_row">
+                            <div class="group">Actor</div>
+                            <div class="group">Writer</div>
+                            <div class="group">Follower</div>
+                        </div>
+                        <div class="group_row">
+                            <div class="group">Director</div>
+                            <div class="group">Producer</div>
+                            <div class="group">Reviewer</div>
+                        </div>
+                    </div>
+                    <button>Find</button>
+                  </template>
+                  <template v-if="content === 'allOfNodes'">
+                    <h2>Display all</h2>
+
+                    <button style="margin-top: 15px;">Display</button>
+                  </template>
+                </div>
+            
+            </div>
+    
+            <div id="viz">
+        
+            </div>
+        </div>
+        
+
+
+    
+    
+    
+</body>
+
+
+<script>
+  new Vue({
+    el: '#app',
+    data: {
+      content: 'singleButton'
+    },
+    methods: {
+      changeContent(content) {
+        this.content = content;
+      }
+    }
+  });
+
+
+  const nodes = [];
+      const edges = [];
+      // process the result to extract the nodes and edges
+      const data = {
+        nodes: nodes,
+        edges: edges
+      };
+      const options = {};
+      const network = new vis.Network(document.getElementByIdч('viz'), data, options);
+
+</script>
+  
+
+  
+
+</html>
+
+
+
