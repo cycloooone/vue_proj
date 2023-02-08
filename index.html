@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+    <title>Neovis.js Simple Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="css/main.css">
+
+</head>
+<body>
+        <div class="wrapper">
+            <div id="app">
+                <!-- Left sidebar -->
+                <div class="sidebar-left">
+                    <div class="sidebar-items">
+                        <div class="sidebar-item" @click="changeContent('singleButton')" >
+                            <img src="img/just/icons8-target-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('twoInputs')">
+                            <img src="img/just/icons8-link-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('groupOfNodes')">
+                            <img src="img/just/icons8-complexity-64.png" alt="">
+                          </div>
+                          <div class="sidebar-item" @click="changeContent('allOfNodes')">
+                            <img src="./img/just/icons8-survey-64.png" alt="">
+                          </div>
+                    </div>
+                  
+                </div>
+            
+                <!-- Right sidebar -->
+                <div class="sidebar-right">
+                  <template v-if="content === 'singleButton'">
+                    <h2>Find One node</h2>
+                    <select v-model="selectedNodeType">
+                      <option value="Movie">Movie</option>
+                      <option value="Person">Person</option>
+                    </select>
+                    
+                    <input v-if="selectedNodeType === 'Movie'" type="text" placeholder="title" v-model="title">
+                    <input v-if="selectedNodeType === 'Person'" type="text" placeholder="name" v-model="name">
+                    <select v-model="selectedLevel">
+                      <option value="1">1 level</option>
+                      <option value="2">2 level</option>
+                    </select>
+                    
+                    <button v-if="selectedNodeType && selectedLevel" @click="findNode">Find</button>
+                  
+                  </template>
+                  <template v-if="content === 'twoInputs'">
+                    <h2>Find two nodes</h2>
+                    <input type="text" placeholder="Node 1">
+                    <input type="text" placeholder="Node 2">
+                    <button>Find</button>
+                  </template>
+                  <template v-if="content === 'groupOfNodes'">
+                    <h2>Group of Nodes</h2>
+                    <div class="groups">
+                        <div class="group_row">
+                            <div class="group">Actor</div>
+                            <div class="group">Writer</div>
+                            <div class="group">Follower</div>
+                        </div>
+                        <div class="group_row">
+                            <div class="group">Director</div>
+                            <div class="group">Producer</div>
+                            <div class="group">Reviewer</div>
+                        </div>
+                    </div>
+                    <button>Find</button>
+                  </template>
+                  <template v-if="content === 'allOfNodes'">
+                    <h2>Display all</h2>
+
+                    <button style="margin-top: 15px;">Display</button>
+                  </template>
+                </div>
+            
+            </div>
+    
+            <div id="network"></div>
+        </div>
+        
+
+
+    
+    
+    
+</body>
+
+
+<script>
+  new Vue({
+  el: '#app',
+  data: {
+    content: '',
+  selectedNodeType: '',
+  selectedLevel: '',
+  title:'',
+  name:''
+  },
+  methods: {
+    changeContent(content) {
+      this.content = content;
+    },
+    findNode() {
+        axios.post('http://localhost:3000/find-node/', {
+      
+        
+      selectedNodeType: this.selectedNodeType,
+      selectedLevel: this.selectedLevel,
+      name: this.name,
+      title:this.title
+  })
+  .then(response => {
+      
+  })
+  .catch(error => {
+      console.log(error);
+  });
+      
+      
+    
+    
+},
+
+
+
+
+  }
+});
+  
+
+
+
+
+
+
+
+</script>
+  
+
+  
+
+</html>
+
+
+
