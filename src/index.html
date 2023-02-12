@@ -2,15 +2,18 @@
 <html>
 <head>
     <title>Neovis.js Simple Example</title>
-    <script src="https://unpkg.com/neovis.js@2.0.2"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-    <script src="https://kit.fontawesome.com/yourcode.js" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <script src="js/neovis_conf.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+<script
+      type="text/javascript"
+      src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"
+    ></script>
     <link rel="stylesheet" href="css/main.css">
 
 </head>
-<body onload="draw()">
+<body>
         <div class="wrapper">
             <div id="app">
                 <!-- Left sidebar -->
@@ -36,14 +39,45 @@
                 <div class="sidebar-right">
                   <template v-if="content === 'singleButton'">
                     <h2>Find One node</h2>
-                    <input type="text" placeholder="Node label">
-                    <button>Find</button>
+                    <select v-model="selectedNodeType">
+                      <option value="Movie">Movie</option>
+                      <option value="Person">Person</option>
+                      <option value="User">User</option>
+                      <option value="Genre">Genre</option>
+                    </select>
+                    
+                    <input v-if="selectedNodeType === 'Movie'" type="text" placeholder="title" v-model="title">
+                    <input v-if="selectedNodeType === 'Person'" type="text" placeholder="name" v-model="name">
+                    <input v-if="selectedNodeType === 'User'" type="text" placeholder="name" v-model="name">
+                    <input v-if="selectedNodeType === 'Genre'" type="text" placeholder="name" v-model="name">
+                    <select v-model="selectedLevel">
+                      <option value="1">1 level</option>
+                      <option value="2">2 level</option>
+                      <option v-if="selectedNodeType === 'Person' || selectedNodeType === 'Movie'" value="3">3 level</option>
+                    </select>
+                    
+                    <button v-if="selectedNodeType && selectedLevel" @click="findNode">Find</button>
+                  
                   </template>
                   <template v-if="content === 'twoInputs'">
-                    <h2>Find two nodes</h2>
-                    <input type="text" placeholder="Node 1">
-                    <input type="text" placeholder="Node 2">
-                    <button>Find</button>
+                    <h2>Find Two node</h2>
+                    <select v-model="selectedNodeType">
+                      <option value="Movie">Movie</option>
+                      <option value="Person">Person</option>
+                    </select>
+                    
+                    <input v-if="selectedNodeType === 'Movie'" type="text" placeholder="title" v-model="title">
+                    <input v-if="selectedNodeType === 'Person'" type="text" placeholder="name" v-model="name">
+                    
+                    <select v-model="selectedNodeType1">
+                      <option value="Movie">Movie</option>
+                      <option value="Person">Person</option>
+                    </select>
+                    
+                    <input v-if="selectedNodeType1 === 'Movie' " type="text" placeholder="title" v-model="title1">
+                    <input v-if="selectedNodeType1 === 'Person' " type="text" placeholder="name" v-model="name1">
+
+                    <button v-if="selectedNodeType && selectedNodeType1" @click="findPath">Find</button>
                   </template>
                   <template v-if="content === 'groupOfNodes'">
                     <h2>Group of Nodes</h2>
@@ -70,12 +104,12 @@
             
             </div>
     
-            <div id="viz">
-        
+            <div id="mynetwork">
+              
             </div>
         </div>
         
-
+        
 
     
     
@@ -84,28 +118,272 @@
 
 
 <script>
-  new Vue({
-    el: '#app',
-    data: {
-      content: 'singleButton'
-    },
-    methods: {
-      changeContent(content) {
-        this.content = content;
+
+function parse(info, node_infs, ids, rels){
+  for(item of info){
+
+for(let i = 0; i < item.keys.length; i++){
+  if(item.keys[i][0] === 'p'){
+    if(!ids.includes(item._fields[i].elementId)){
+      if(item._fields[i].properties.poster === null){
+        node_infs.push({id: item._fields[i].elementId, shape:'dot',  title: 'Person', label: item._fields[i].properties.name})
+  ids.push(item._fields[i].elementId)
       }
-    }
-  });
+      else{
+        node_infs.push({id: item._fields[i].elementId, shape:'dot',  title: 'Person', label: item._fields[i].properties.name})
+  ids.push(item._fields[i].elementId)
+      }
+  
+}
+  }
+  if(item.keys[i][0] === 'm'){
+    if(!ids.includes(item._fields[i].elementId)){
+      if(item._fields[i].properties.poster === null){
+        node_infs.push({id: item._fields[i].elementId,  shape:'dot', title: item._fields[i].labels[0], label: item._fields[i].properties})
+  ids.push(item._fields[i].elementId)
+      }
+      else{
+        node_infs.push({id: item._fields[i].elementId,  shape:'dot', title: item._fields[i].labels[0], label: item._fields[i].properties.title})
+  ids.push(item._fields[i].elementId)
+      }
+  
+}
+}
+if(item.keys[i][0] === 'g' || item.keys[i][0] === 'u'){
+  if(!ids.includes(item._fields[i].elementId)){
+  node_infs.push({id: item._fields[i].elementId, shape:'dot', title: item._fields[i].labels[0], label: item._fields[i].properties.name })
+  ids.push(item._fields[i].elementId)
+}
+}
+if(item.keys[i][0] === 'r'){
+    if(!ids.includes(item._fields[i].elementId))
+    rels.push({from: item._fields[i].startNodeElementId, to: item._fields[i].endNodeElementId, color: 'Green', label:item._fields[i].type, id:item._fields[i].elementId})
+    ids.push(item._fields[i].elementId)
+  }
+}
 
 
-  const nodes = [];
-      const edges = [];
-      // process the result to extract the nodes and edges
-      const data = {
+}
+}
+
+
+
+
+  let info = '';
+  new Vue({
+  el: '#app',
+  data: {
+  content: '',
+  selectedNodeType: '',
+  selectedNodeType1:'',
+  selectedLevel: '',
+  title:'',
+  name:'',
+  title1:'',
+  name1:''
+  },
+  methods: {
+    changeContent(content) {
+      this.content = content;
+    },
+    findNode() {
+        
+        axios.get('http://localhost:3000/find-node/', { 
+          params: {
+            selectedNodeType: this.selectedNodeType,
+            selectedLevel: this.selectedLevel,
+            name: this.name,
+            title:this.title
+          }
+        })
+        .then(response => {
+          info = response.data
+      console.log(info)
+      var node_infs = [];
+      var ids = []
+      var rels = []
+      parse(info, node_infs, ids, rels)
+      // console.log(response.data)
+      
+
+
+      
+      // console.log(node_infs)
+      var nodes = new vis.DataSet(node_infs);
+
+      var edges = new vis.DataSet(rels);
+
+      var options = {
+        nodes: {
+            
+            size: 30,
+          },
+          
+          
+        };
+        
+
+
+      // create a network
+      var container = document.getElementById("mynetwork");
+      var data = {
         nodes: nodes,
-        edges: edges
+        edges: edges,
       };
-      const options = {};
-      const network = new vis.Network(document.getElementByIdч('viz'), data, options);
+      
+    node_infs.push()
+    
+    
+    var network = new vis.Network(container, data, options);   
+    console.log(typeof(network))
+    network.on( 'click', function(properties) {
+      
+      var ids = properties.nodes;
+    var clickedNodes = nodes.get(ids);
+    console.log('clicked nodes:', clickedNodes);
+    var datafor = {label: clickedNodes[0].label, title: clickedNodes[0].title }
+    axios.get('http://localhost:3000/expand-node/', { 
+          params: {
+            label: datafor.label,
+            title: datafor.title
+          }
+    })
+    .then(response => {
+      console.log(response.data)
+      const info = response.data
+      parse(response.data, node_infs, ids, rels)
+nodes.update(node_infs)
+edges.update(rels)
+      
+    })
+    // console.log('clicked nodes:', clickedNodes[0].label, clickedNodes[0].title);
+    
+    // nodes.update(expanded_Node.nodes)
+ 
+    
+  });     // network.on
+        })
+
+        
+  }, // findnode
+
+
+  findPath(){
+    axios.get('http://localhost:3000/find-path/', {
+
+      params: {
+            selectedNodeType1: this.selectedNodeType1,
+            selectedNodeType: this.selectedNodeType,
+            name: this.name,
+            title:this.title,
+            name1: this.name1,
+            title1:this.title1
+          }
+    }).then(response => {
+      var nodes = []
+      var rels = []
+      var ids = []
+      var info = response.data
+      var segments = ''
+      console.log(response.data)
+      for(let j = 0; j < info.length; j++){
+        segments = info[j]._fields[0].segments
+        console.log(segments)
+        for(let i = 0; i < segments.length; i++){
+        if(!ids.includes(segments[i].start.elementId)){
+        nodes.push({shape: 'circularImage', id: segments[i].start.elementId, label: segments[i].start.labels[0], title: segments[i].start.labels[0], image:segments[i].start.properties.poster})
+        ids.push(segments[i].start.elementId)
+      }
+      if(!ids.includes(segments[i].end.elementId)){
+        nodes.push({shape: 'circularImage', id: segments[i].end.elementId, label: segments[i].end.labels[0], title: segments[i].end.labels[0], image:segments[i].end.properties.poster})
+        ids.push(segments[i].end.elementId)
+      }
+        rels.push({from: segments[i].relationship.startNodeElementId, to: segments[i].relationship.endNodeElementId, id: segments[i].relationship.elementId} )
+      }
+      }
+      
+      for(let i = 0; i < nodes.length; i++){
+        console.log(nodes[i])
+      }
+      console.log('')
+      for(let i = 0; i < rels.length; i++){
+        console.log(rels[i])
+      }
+      console.log('this is from video', response)
+      
+      var container = document.getElementById("mynetwork");
+      var nodes = new vis.DataSet(nodes);
+
+      var edges = new vis.DataSet(rels);
+
+      var data = {
+        nodes: nodes,
+        edges: edges,
+      };
+      console.log(data)
+      var options = {
+        nodes: {
+            
+            size: 30,
+          },
+          layout: {
+            randomSeed: 34,
+          },
+          
+        };
+      var container = document.getElementById("mynetwork");
+
+    var network = new vis.Network(container, data, options);  
+    network.on( 'click', function(properties) {
+      
+      var ids = properties.nodes;
+    var clickedNodes = nodes.get(ids);
+    console.log('clicked nodes:', clickedNodes);
+    var datafor = {label: clickedNodes[0].label, title: clickedNodes[0].title }
+    axios.get('http://localhost:3000/expand-node/', { 
+          params: {
+            label: datafor.label,
+            title: datafor.title
+          }
+    })
+    .then(response => {
+      console.log(response.data)
+      const info = response.data
+      parse(response.data, nodes, ids, rels)
+nodes.update(nodes)
+edges.update(rels)
+      
+    })
+    // console.log('clicked nodes:', clickedNodes[0].label, clickedNodes[0].title);
+    
+    // nodes.update(expanded_Node.nodes)
+ 
+    
+  }); 
+    
+    })
+
+    
+    
+
+  },
+}   // methods
+
+
+});  // vue
+
+
+
+
+
+  
+
+ // here it is
+
+
+
+
+
 
 </script>
   
@@ -113,6 +391,68 @@
   
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
